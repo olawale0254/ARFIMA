@@ -1,2 +1,2 @@
 # ARFIMA
-Autoregressive Fractional Moving Average
+Autoregressive Fractional Integrated Moving Average
