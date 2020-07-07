@@ -1,0 +1,76 @@
+library(tseries)
+asi<-ts(read.csv("asi.csv",header= F),frequency=12, start=c(1991,1))
+head(asi)
+library(tidyverse)
+library(tidyquant)
+library(timetk)
+asi<-tk_tbl(asi, preserve_index = TRUE, rename_index = "index",
+            timetk_idx = FALSE, silent = FALSE)
+asi<- tk_ts(asi, start = c(1991,1), freq = 336)
+asi
+train = window(asi, start=1, end=326);asi #asi data
+test = window(asi, start=2018, end=c(2018,12));test #Test data
+plot.ts(asi, ylab="ASI frequency", xlab="Year", main="Time Plot of NSE ASI")
+acf(asi,lag.max = 120, main="Correlogram Plot of NSE ASI") 
+pacf(asi,lag.max = 120, main="Partial Correlogram Plot of NSE ASI")
+summary(asi)
+library(moments)
+skewness(asi)
+kurtosis(asi)
+jarque.bera.test(asi)
+adf.test(asii, alternative = "stationary")
+library(fractal)
+library(pracma)
+hurstexp(asi) #Test for long memory using Hurst Exponent
+library(fracdiff)
+fdGPH(asii, bandw.exp = 0.5) #Order of differencing estimation
+adf.test(diffseries(asi,0.204), alternative = "stationary")
+library(arfima)
+x <- arfima(asi, fixed=list(frac=0.204),dmean=FALSE)
+y <- resid(x);y
+y <- as.numeric(unlist(y))
+acf(y,main="Fractionally differenced ACF of NSE ASI asi data")
+pacf(y,main="Fractionally differenced PACF of NSE ASI asi data")
+fitArfima1 <- arfima(asi,order=c(2,0,2),fixed=list(frac=0.204),dmean=FALSE);summary(fitArfima1)
+fitArfima2 <- arfima(asi,order=c(3,0,2),fixed=list(frac=0.204),dmean=FALSE);summary(fitArfima2)
+fitArfima3 <- arfima(asi,order=c(2,0,1),fixed=list(frac=0.204),dmean=FALSE);summary(fitArfima3)
+fitArfima4 <- arfima(asi,order=c(4,0,1),fixed=list(frac=0.204),dmean=FALSE);summary(fitArfima4) #Best model
+fitArfima5 <- arfima(asi,order=c(3,0,3),fixed=list(frac=0.204),dmean=FALSE);summary(fitArfima5)
+fitArfima4
+fit=fitted(fitArfima4)
+xx<-residuals(fitArfima4)
+yy <- as.numeric(unlist(xx))
+Box.test(yy, type=c("Ljung-Box"))
+library(forecast)
+index(fitArfima4)
+forecast(fitArfima1,h = 24)
+fit4<-as.numeric(unlist(fit));fit4
+res<-resid(fitArfima4)
+library(ggplot2)
+tsdisplay(res)
+shapiro.test(fit4_res)
+jarque.bera.test(fit4_res)
+tsdiag(fit4_res)
+f<-forecast(fitArfima4, n.ahead =24)
+accuracy(f)
+library(forecast)
+##Seasonal arima model##
+plot.ts(diff(asi), ylab="First differenced ASI frequency", xlab="Year", main="Differenced Time Plot of NSE ASI (d = 1)")
+acf(diff(asi),lag.max = 120, main="Correlogram Plot of NSE ASI (d = 1)")
+pacf(diff(asi),lag.max = 120, main="Correlogram Plot of NSE ASI (d = 1)")
+auto1 <- auto.arima(diff(asi),max.p = 10,max.q = 10,stationary=TRUE,stepwise=FALSE,approx=TRUE,seasonal = TRUE);summary(auto1)
+fit_arima1 <- arima(asi,order=c(1,1,3),seasonal = list(order = c(1, 1, 0), period = 12));summary(fit_arima1);BIC(fit_arima1)
+fit_arima2 <- arima(asi,order=c(4,1,1),seasonal = list(order = c(1, 1, 1), period = 12));summary(fit_arima2)#Best Model
+fit_arima3 <- arima(asi,order=c(2,1,2),seasonal = list(order = c(1, 1, 0), period = 12));summary(fit_arima3)
+fit_arima4 <- arima(asi,order=c(1,1,1),seasonal = list(order = c(1, 1, 0), period = 12));summary(fit_arima4)
+fit_arima5 <- arima(asi,order=c(3,1,1),seasonal = list(order = c(1, 1, 0), period = 12));summary(fit_arima5)
+coef.test(fit_arima3)
+tsdiag(auto1,18)
+tsdiag(fit_arima5) #Best 
+Box.test(resid(fit_arima2))
+jarque.bera.test(resid(fit_arima2))
+predict(fit_arima4, n.ahead = 24, se=T)
+forecast(fit_arima2, h=24)
+accuracy(forecast(fit_arima2, h=24))
+write.csv(forecast(fit_arima2, h=24))
+pred
